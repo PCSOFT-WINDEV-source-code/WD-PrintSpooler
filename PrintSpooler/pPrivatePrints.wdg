@@ -1,0 +1,333 @@
+#To edit and compare internal_properties, use WINDEV integrated tools.
+#Internal properties refer to the properties of controls in windows, reports, etc.
+info :
+ name : pPrivatePrints
+ major_version : 28
+ minor_version : 0
+ type : 7
+ description : ""
+ subtype : 0
+procedure_set :
+ identifier : 0x16bb18dd011720c6
+ internal_properties : CAAAAAgAAABGLu41kG7fjQV3iS4F72qmnKaNh5694reolNKIW0iw
+ code_elements :
+  internal_properties : CAAAAAgAAABij4H7ix7bU4/Kq3Sl0Xh1bFug0r0ObIhDXuMojw64Y0u2we213Mf8+1DE5EZMR8OoIgbp88XZWYPQsPnr38DtKo8lvOFcJ5x0y7l48SDPodYuRRYmGhNDlP+EyqLdypCjt6kSdb9bs3eJ+3IxQgkme3yOozV2EBiIb9+MqmCSgvzEt2evTgG4c9UQuA+Kon75xpqIJUpg44mafRi8p4KdJ42YVvP/Rb4/3voS6+bXx9LytQlL4ra+uTrov3zWUxeQ3plBySQFRocg8t528mSiqRhi3bNQx4DC9SqisWAtCtgBhK/RfsDJsUCcV1Z0wpgNA268vOpzzkQHo8qHyxtOADgWJj57sSt2ZCEOuMuHPbN+mAY9PEfQ8oviBnMddlzodUMt2mqEKppPnbyMfZKqJjNccbdMr2MXrjpCa82SoNS4Tbfg4HhPumXh
+  type_code : 31
+  p_codes :
+   -
+     code : |1+
+      CONSTANT
+      	JOB_STATUS_BLOCKED = 0x200
+      	JOB_STATUS_DELETED = 0x100
+      	JOB_STATUS_DELETING = 0x4
+      	JOB_STATUS_ERROR = 0x2
+      	JOB_STATUS_OFFLINE = 0x20
+      	JOB_STATUS_PAPEROUT = 0x40
+      	JOB_STATUS_PAUSED = 0x1
+      	JOB_STATUS_PRINTED = 0x80
+      	JOB_STATUS_PRINTING = 0x10
+      	JOB_STATUS_RESTART = 0x800
+      	JOB_STATUS_SPOOLING = 0x8
+      	JOB_STATUS_USER_INTERVENTION = 0x10000
+      	
+      	
+      	MIN_PRIORITY = 1
+      	MAX_PRIORITY = 99
+      	DEF_PRIORITY = 1
+      	
+      	
+      END
+      
+      // Name of the configuration file
+      gsConfigFile is string = CompleteDir(fExeDir()) + "Config.ini" 
+      // List of printers that must be taken into account for the distribution
+      gsPrinterList is string
+      // Name of the favorite printer
+      gsFavoritePrinter is string
+      
+      // Retrieve the printers to use
+      GetPrinters()
+     type : 720896
+  procedures :
+   -
+     name : GetStatus
+     internal_properties : CAAAAAgAAACCAkOVVkFKG5RctwplI6sEFDfInHD8AlAvSC5Trm3kUUETA2eKqRECxO+o1gY1w/vTVwJUPdP2KbAvzjhI1jyo/l96GHwAsgpfS08crMNddwZI8wwp53LWgNG1JKabEDBHJ0vi0fdwrM764YMnqZH2f2j5rZGraX1AIo1U3hiR0nLsRZfGRzyXWfTbfnUvrjLgm+wRMndQpYRVMEiSldGd525nh9UwnDoWG8BLpDh58YnsVwayqce1yvifGOBzKZKF
+     procedure_id : 1637930226964504774
+     type_code : 15
+     code : |1-
+      // Syntax:
+      //[ <Result> = ] GetStatus (<sJobInfo> is STJOB_INFO_2)
+      //
+      // Parameters:
+      //	sJobInfo (STJOB_INFO_2): JOB_INFO_2 structure containing information about the job currently analyzed
+      // Return value:
+      // 	string: Message that returns the status of the print
+      
+      PROCEDURE GetStatus(sJobInfo is STJOB_INFO_2)
+      
+      sReturnValue is string
+      
+      
+      IF sJobInfo:nStatus <> 0 THEN
+      	
+      	// Retrieves the value of the string containing the status
+      	sReturnValue = StringRetrieve(	sJobInfo:nStatus, srASCIIZAddress )
+      	
+      ELSE	
+      	
+      	// Tests the possible values for the status
+      
+      	IF BinaryAND(sJobInfo:nStatus, JOB_STATUS_ERROR) THEN
+      		sReturnValue = <§@10eeca0600c189410000§>
+      	END
+      	
+      	IF BinaryAND(sJobInfo:nStatus, JOB_STATUS_BLOCKED) THEN
+      		sReturnValue += <§@10eeca0600c189410001§>	
+      	END
+      	
+      	IF BinaryAND(sJobInfo:nStatus, JOB_STATUS_DELETED) THEN
+      		sReturnValue += <§@10eeca0600c189410002§>
+      	END
+      	
+      	IF BinaryAND(sJobInfo:nStatus, JOB_STATUS_DELETING) THEN
+      		sReturnValue += <§@10eeca0600c189410003§>
+      	END
+      	
+      	IF BinaryAND(sJobInfo:nStatus, JOB_STATUS_OFFLINE) THEN
+      		sReturnValue += <§@10eeca0600c189410004§>
+      	END
+      	
+      	
+      	IF BinaryAND(sJobInfo:nStatus, JOB_STATUS_PAPEROUT) THEN
+      		sReturnValue += <§@10eeca0600c189410005§>
+      	END
+      	
+      	
+      	IF BinaryAND(sJobInfo:nStatus, JOB_STATUS_PAUSED) THEN
+      		sReturnValue += <§@10eeca0600c189410006§>
+      	END
+      	
+      	IF BinaryAND(sJobInfo:nStatus, JOB_STATUS_PRINTED) THEN
+      		sReturnValue += <§@10eeca0600c189410007§>
+      	END
+      	
+      	IF BinaryAND(sJobInfo:nStatus, JOB_STATUS_PRINTING) THEN
+      		sReturnValue += <§@10eeca0600c189410008§>
+      	END
+      	
+      	
+      	IF BinaryAND(sJobInfo:nStatus, JOB_STATUS_RESTART) THEN
+      		sReturnValue += <§@10eeca0600c189410009§>
+      	END
+      	
+      	IF BinaryAND(sJobInfo:nStatus, JOB_STATUS_SPOOLING) THEN
+      		sReturnValue += <§@10eeca0600c18941000a§>
+      	END
+      	
+      	IF BinaryAND(sJobInfo:nStatus, JOB_STATUS_USER_INTERVENTION) THEN
+      		sReturnValue += <§@10eeca0600c18941000b§>
+      	END
+      	
+      	
+      END
+      
+      RESULT sReturnValue
+     type : 458752
+   -
+     name : GetDate
+     procedure_id : 1637930226964570310
+     type_code : 15
+     code : |1-
+      // Syntax:
+      //[ <Result> = ] FindDate (<stJobInfo> is STJOB_INFO_2 [, <sFormat> is string])
+      //
+      // Parameters:
+      //	stJobInfo (STJOB_INFO_2): Variable of STJOB_INFO_2 structure containing information about the current job
+      //	sFormat (ANSI string): Character string
+      //			  Format for the date
+      // Return value:
+      // 	ANSI string: Date and time formatted to the specified format
+      
+      // 			  this format must be such as (DateFormat + " " + TimeFormat)
+      // 			  ExtractString being used to separate the two formats, no space characters must be found in DateFormat and in TimeFormat
+      // 			  The default format is "MM/DD/YYYY" for the date and "HH:MM" for the time
+      PROCEDURE GetDate(stJobInfo is STJOB_INFO_2, sFormat is string = <§@10eeca0600c18941000c§>)
+      
+      dtPrintDate is datetime
+      
+      dtPrintDate..Year = stJobInfo:stSubmitted:nYear
+      dtPrintDate..Hour = stJobInfo:stSubmitted:nHour
+      dtPrintDate..Day = stJobInfo:stSubmitted:nDay
+      dtPrintDate..Minute = stJobInfo:stSubmitted:nMinute
+      dtPrintDate..Millisecond = stJobInfo:stSubmitted:nMilliseconds
+      dtPrintDate..Month = stJobInfo:stSubmitted:nMonth
+      dtPrintDate..Second = stJobInfo:stSubmitted:nSecond
+      
+      
+      RESULT DateToString(dtPrintDate..Date,ExtractString(sFormat,1," ")) + " " + TimeToString(dtPrintDate..Time, ExtractString(sFormat,2," "))
+     type : 458752
+   -
+     name : GetPrinters
+     internal_properties : CAAAAAgAAADgC4xaLGyN6TpaVy1q1hsiL8TsHKKD7T5osozVDZTSw7bbcQxRKvC1oMgKcF621S6kHPSl7v4t43Bc5Z5s/AQlR3Cq+lwSr5LGnhqsnp/AqziV87uHiFXivhNekDWm2LVVjBOpXhMHwMJ1wJdGwiuWj/V5cJqnQtmCN4b4l2PJtLBSDEBJiNdCLoOFkxZ+78RyCi3AU3g=
+     procedure_id : 1637930226964635846
+     type_code : 15
+     code : |1-
+      // Syntax:
+      //[ <Result> = ] GetPrinters ()
+      //
+      // This function is used to retrieve the list of printers that must be used for the distribution.
+      // These printers are stored in a INI file.
+      // if the INI file does not exist, the list of printers contains all the printers installed on the current computer
+      
+      PROCEDURE GetPrinters()
+      
+      sListKeyword is string // List of keywords for the configuration INI file
+      sAKeyword is string // A keyword for the configuration INI file	
+      
+      
+      // If the file does not exist
+      IF fFileExist(gsConfigFile) = False THEN
+      	
+      	// The file is not found, all the printers are selected by default
+      	gsPrinterList = iListPrinter()
+      	
+      ELSE
+      	
+      	// Retrieve the favorite printer
+      	gsFavoritePrinter = INIRead(<§@10eeca0600c18941000e§>, <§@10eeca0600c18941000f§>, "", gsConfigFile)
+      	
+      	// Retrieve the list of keywords for the INI file
+      	sListKeyword = INIRead(<§@10eeca0600c189410010§>, "", "", gsConfigFile)
+      	
+      	// If the list of keywords is empty, 
+      	IF sListKeyword ~= "" THEN 
+      		
+      		// Deletes the file
+      		fDelete(gsConfigFile)
+      		
+      		// Refresh the list of printers to use
+      		gsPrinterList = iListPrinter()
+      		
+      		// Return True
+      		RESULT True
+      		
+      	END
+      	
+      	// Resets the list of printers
+      	gsPrinterList = ""
+      	
+      	// Browse the words of the configuration file
+      	FOR EACH string sAKeyword of sListKeyword SEPAREE by CR
+      		IF sAKeyword IN ("", EOT) THEN CONTINUE
+      		
+      		// Refresh the list of printers to use
+      		IF INIRead(<§@10eeca0600c189410010§>, sAKeyword, "", gsConfigFile) = "1" THEN
+      			
+      			// Check whether the printer is still installed
+      			IF Position(iListPrinter(), sAKeyword, 1) >=1 THEN
+      				
+      				// Don't add the CR character at the beginning if the list of selected printers is empty
+      				IF gsPrinterList = "" THEN
+      					gsPrinterList = sAKeyword
+      				ELSE
+      					// A CR character must be added at the beginning
+      					gsPrinterList += CR + sAKeyword 	
+      				END	
+      				
+      			ELSE
+      				
+      				// Deletes the printer from the INI file
+      				INIWrite(<§@10eeca0600c189410010§>, sAKeyword, Null, gsConfigFile)
+      				
+      			END
+      			
+      			
+      		END
+      		
+      	END
+      	
+      	RESULT True
+      END
+      
+      RESULT True
+     type : 458752
+  procedure_templates : []
+  property_templates : []
+ code_parameters :
+  internal_properties : CAAAAAgAAACVGQgYbalU7DKC3oH4ItDrjtcTHXXV/EuH8q0IbhyQlw==
+  original_name : pImpressionsPrivée
+resources :
+ string_res :
+  identifier : 0x10eeca0600c18941
+  internal_properties : CAAAAAgAAACm76HWfKGWp33VjXInA4cRlqArlgTTA862QGt72W2ld5Y=
+  strings :
+   -
+     text :
+      en-GB : "Error: "
+     index : 0
+   -
+     text :
+      en-GB : "Unable to print, the driver cannot print the document"
+     index : 1
+   -
+     text :
+      en-GB : The print was erased from the spooler
+     index : 2
+   -
+     text :
+      en-GB : The print is currently erased
+     index : 3
+   -
+     text :
+      en-GB : The printer is not accessible
+     index : 4
+   -
+     text :
+      en-GB : The printer is out of paper
+     index : 5
+   -
+     text :
+      en-GB : The printout is paused
+     index : 6
+   -
+     text :
+      en-GB : The print is performed
+     index : 7
+   -
+     text :
+      en-GB : The print is in progress
+     index : 8
+   -
+     text :
+      en-GB : The print was restarted
+     index : 9
+   -
+     text :
+      en-GB : The print is pending in the spooler
+     index : 10
+   -
+     text :
+      en-GB : The printer is in error and a user action is required
+     index : 11
+   -
+     text :
+      en-GB : "MM/DD/YYYY HH:MM"
+     index : 12
+   -
+     text :
+      en-GB : " "
+     index : 13
+   -
+     text :
+      en-GB : FAVORITE
+     index : 14
+   -
+     text :
+      en-GB : Printer
+     index : 15
+   -
+     text :
+      en-GB : PRINTER
+     index : 16
+custom_note :
+ internal_properties : CAAAAAgAAABtB9HWVzrXO2+4NDRVK0vmzaNKrCKqH1DBX30lMmGZ

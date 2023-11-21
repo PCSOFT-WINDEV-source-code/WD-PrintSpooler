@@ -1,0 +1,424 @@
+#To edit and compare internal_properties, use WINDEV integrated tools.
+#Internal properties refer to the properties of controls in windows, reports, etc.
+info :
+ name : pPrints
+ major_version : 28
+ minor_version : 0
+ type : 7
+ description : ""
+ subtype : 0
+procedure_set :
+ identifier : 0x16bb18dc01071cde
+ internal_properties : CAAAAAgAAABGLu41kG7fjQV3iS4F72qmnKaNh5694reolNKIW0iw
+ code_elements :
+  internal_properties : CAAAAAgAAAAe62mQe0Xg93RMeTCCBfo9Hf3s8/Xf/h9CLVjlFxng/m6kRXSeRoXZU+YbToHoGcQznMQ0UCv4Dcyh+UPVywOMSYZEHqLvN/Y=
+  type_code : 31
+  p_codes :
+   -
+     internal_properties : CAAAAAgAAAC1nHRH0b+QDctUgf8YhJI1SvQWHG81JJmRZoQOykXTaWzBcUnQT8UTql0SF3mY1UznQ7VLIKHGE2itnfKjUzMESzc/4+qZ1+GXmOChyxXskzHei8kb6U/aS4Sta0HtnEavY8x2OLmpxGRurCc66yltyAeNA6XobeG0Xceeue86OQ==
+     code : |1+
+      
+      
+      STSTRUCT_LOAD is Structure
+      	
+      	sPrinterName is string
+      	nNbJobs is int
+      	nTotalSize is int
+      	
+      END
+      
+      // Structure of dates and times
+      STSYSTEMTIME is Structure
+      	nYear is 2-byte int 
+      	nMonth is 2-byte int
+      	nDayOfWeek is 2-byte int
+      	nDay is 2-byte int 
+      	nHour is 2-byte int
+      	nMinute is 2-byte int
+      	nSecond is 2-byte int
+      	nMilliseconds is 2-byte int
+      END
+      
+      
+      // Structure containing the information on a printer job
+      STJOB_INFO_2 is Structure
+      	nJobId is system int // Identifier of job currently analyzed
+      	nPrinterName is system int // Name of the current printer
+      	nMachineName is system int // Name of the computer that has requested this print
+      	nUserName is system int // Name of the user who has requested this print
+      	nDocument is system int // Name of the document sent to the printer
+      	nNotifyName is system int // Name of the user who must be notified if an error occurs or when the printout ends
+      	nDatatype is system int // Type of data used to save the job
+      	nPrintProcessor is system int // Name of the print processor
+      	nParameters is system int // Parameters to pass to the print processor
+      	nDriverName is system int // Name of the printer driver
+      	nDevMode is system int // Pointer on a structure containing information on the parameters passed to the driver
+      	nSecurityDescriptor is system int // Description of the security attributes = Null
+      	nStatus is system int // Status of the printout
+      	nPriority is system int // Priority (integer between 1 and 99)
+      	nPosition is system int // Position in the spooler
+      	nStartTime is system int // Minimum time for printing
+      	nUntilTime is system int // Maximum time for printing
+      	nTotalPages is system int // Total number of pages to print
+      	nSize is system int // Size of the document to print
+      	stSubmitted is STSYSTEMTIME // Date and time when the document was sent
+      	nTime is system int // Total time passed since the start of print
+      	nPagesPrinted is system int // Number of printed pages
+      END
+     type : 720896
+  procedures :
+   -
+     name : GetJobs
+     internal_properties : CAAAAAgAAAA0jKnlmxM+U9pVoGJL/negj8Khj19B0Dcw0E4uNecc+QqyfjYHXrZCbiy/RPjHWauUTS865wnbfkP2MK6yrhA6MxeECTLh/0PIJ6eTddc5EWhTtKnVaFXyvOlEsg3+AJ2/dh2PZHdD/D6xLFemeFdCfTtPykTNiB/GC0rYl4/FeEv1pTc0cZLv65hqqg9zwoIybQiNvCDW/O3EWlCz5qjxo14OQtLP
+     procedure_id : 1637930222668487902
+     type_code : 15
+     code : |1-
+      // Syntax:
+      //[ <Result> = ] GetJobs (<sPrinterName> is string [, <nNbJobs> is int [, <nTotalSize> is int]])
+      //
+      // Parameters:
+      //	sPrinterName (ANSI string): Name of the printer for which the jobs must be retrieved
+      //	nNbJobs (integer - default value=0): Number of jobs for the printer -> In output only
+      //	nTotalSize (integer - default value=0): Total size of the files to print -> In output only
+      // Return value:
+      // 	ANSI string:  List of printer jobs
+      //				This string has the following format: 
+      //    			Identifier + TAB + Printer Name + TAB + Name of the computer that has requested the print + TAB
+      // 				Name of the user who has requested the print + TAB + Name of the document to print + TAB
+      // 				Data Type + TAB + Printout Status + TAB + Priority + TAB + Position in Print Spooler + TAB +
+      // 				Total Number of Pages + TAB + Number of Printed Pages + TAB + Date and time of the print request + CR
+      
+      PROCEDURE GetJobs(LOCAL sPrinterName is string, nNbJobs is int = 0, nTotalSize is int = 0)
+      
+      nPrinter is int // Handle of the printer	
+      nNeed is int // Number of bytes required by the API
+      nReturned is int // Number of jobs returned
+      nRet is int // Return value of the API
+      sReturnString is string // Return string of this function
+      stInfoJob2 is STJOB_INFO_2 // A job (information on the printer job)
+      sfBufferJob is string on 65535
+      
+      
+      // Open the printer
+      IF NOT API("winspool.drv", "OpenPrinterA", sPrinterName, &nPrinter, Null) THEN
+      	// Error opening the printer
+      	Error(StringBuild(<§@10ee9b3500b9a9470002§>, sPrinterName))
+      	RESULT ""
+      END
+      
+      // Retrieve all the printer jobs
+      nRet = API("winspool.drv", "EnumJobsA", nPrinter, 0, 255, 2, &sfBufferJob, 65535, &nNeed, &nReturned)
+      
+      
+      nMemoryZone is system int = &sfBufferJob
+      
+      // Refreshes the number of jobs that must be done by the printer
+      nNbJobs = nReturned
+      
+      FOR i = 1 TO nReturned
+      	
+      	// Retrieve the structure containing the information on a printer job
+      	Transfer(&stInfoJob2, nMemoryZone, Dimension(stInfoJob2))
+      	
+      	// Build the return string
+      	sReturnString += [CR] + stInfoJob2:nJobId
+      	sReturnString += TAB + StringRetrieve(stInfoJob2:nPrinterName, srASCIIZAddress) 
+      	sReturnString += TAB + StringRetrieve(stInfoJob2:nMachineName, srASCIIZAddress) 
+      	sReturnString += TAB + StringRetrieve(stInfoJob2:nUserName, srASCIIZAddress)
+      	sReturnString += TAB + StringRetrieve(stInfoJob2:nDocument, srASCIIZAddress)
+      	sReturnString += TAB + StringRetrieve(stInfoJob2:nDatatype, srASCIIZAddress)
+      	sReturnString += TAB + GetStatus(stInfoJob2)
+      	sReturnString += TAB + stInfoJob2:nPriority
+      	sReturnString += TAB + stInfoJob2:nPosition
+      	sReturnString += TAB + stInfoJob2:nTotalPages
+      	sReturnString += TAB + stInfoJob2:nPagesPrinted
+      	
+      	nTotalSize += stInfoJob2:nSize/1024
+      
+      	// Increment the memory address
+      	nMemoryZone += Dimension(stInfoJob2)
+      	
+      END
+      
+      // Close the printer
+      API("winspool.drv", "ClosePrinter", nPrinter)
+      
+      // Return the return string
+      RESULT sReturnString
+     type : 458752
+   -
+     name : DistributeLoad
+     internal_properties : CAAAAAgAAAC8BH34O0kCa2g7iBpjRA/Y1Ugfri5hOrV4uByU93MOU+Kato4tggA4CmiRAtrzC338ZZe6LT0lbOcKJtyMsnKIax+YbSSpRf0I98mR7xtf2+Rv1PqazZ6tZUo19VKTJ0ZUgxRgwQSMN39yjY4X8XYjuqg+8y0G7QL/vFvjACCM+SjqLNCt2ieSSGUX9dDULUdnge2It9ftlXSbwQlWJaWsOqVK2kpX
+     procedure_id : 1637930222668553438
+     type_code : 15
+     code : |1+
+      // Syntax:
+      //[ <Result> = ] DistributeLoad ()
+      //
+      // 	This procedure tests all the printers installed on the current computer and checks the number of jobs that must be performed
+      // 	Then, the procedure sorts the printers and keeps the printers with the minimum workload
+      //
+      // 
+      // 	string: Returns a character string containing the list of printers with the minimum workload
+      
+      PROCEDURE DistributeLoad()
+      
+      
+      sPrinterList is string // List of printers with the minimum workload
+      sAPrinter is string // Contains the name of a printer
+      sListJobs is string // List of printer jobs
+      nNbJobs is int // Number of prints that must be performed by a printer
+      arrTabLoad is array dynamic of 0 STSTRUCT_LOAD // Table containing the printers and the number of jobs per printer
+      stALoad is STSTRUCT_LOAD // Intermediate variable used to add a value to the table
+      nNbEqualPrinters is int // Number of printers with the same workload (same number of jobs)
+      nTotalSize is int // Total size of the files to print
+      
+      
+      // Initialize the counters
+      nNbEqualPrinters = 1
+      
+      // Checks the list of printers
+      IF fFileExist(pPrivatePrints.gsConfigFile) = False OR pPrivatePrints.gsPrinterList ~="" THEN
+      	
+      	// Empty list
+      	IF Open(WIN_Configuration) THEN
+      		
+      		// Retrieve the selected printers
+      		GetPrinters()
+      		// Checks the list again
+      		IF fFileExist(pPrivatePrints.gsConfigFile) = False OR pPrivatePrints.gsPrinterList ~="" THEN
+      			// The list is still empty, return ""
+      			RESULT ""
+      		END
+      		
+      	ELSE
+      		// The user has canceled, return False
+      		RESULT ""
+      	END
+      	
+      END
+      
+      // Browse the printers
+      FOR EACH string sAPrinter of pPrivatePrints.gsPrinterList SEPAREE by CR
+      	IF sAPrinter IN ("", EOT) THEN CONTINUE
+      	
+      	// Retrieve the list of jobs to be done by the printer
+      	sListJobs = GetJobs(sAPrinter, nNbJobs, nTotalSize)
+      	
+      	// Check the table of workloads 
+      	// - If there is at least one printer
+      	// - If the first printer has the same number of jobs as the current one
+      	IF Dimension(arrTabLoad) > 0 _AND_ arrTabLoad[1]:nNbJobs = nNbJobs THEN
+      		// Increment the number of identical printers
+      		nNbEqualPrinters++		
+      	END
+      	
+      	// Refresh the Load variable
+      	stALoad:nNbJobs = nNbJobs
+      	stALoad:sPrinterName = sAPrinter
+      	stALoad:nTotalSize = nTotalSize
+      	
+      	// Adds the workload of this printer to the table
+      	ArrayAdd(arrTabLoad, stALoad)
+      	
+      	// Sort the table so that the printer with the minimum number of documents is the first one
+      	ArraySort(arrTabLoad, asMember, <§@10ee9b3500b9a9470005§>)	
+      	
+      END
+      
+      // Resets the return variable that will contain the list of printers with the minimum workload
+      sPrinterList = ""
+      
+      // Refresh the list with the first printer
+      sPrinterList = arrTabLoad[1]:sPrinterName
+      
+      // As long as identical printers are found
+      FOR i = 2 TO nNbEqualPrinters
+      	
+      	// Check the size of the jobs to perform
+      	// Exit the loop if the size of the files to print is greater than the size of the files for the previous printer
+      	// because the table is sorted by: 
+      	// 		1 - Number of jobs to perform
+      	// 		2 - Total size of the jobs to perform
+      	
+      	IF arrTabLoad[i]:nTotalSize = arrTabLoad[i-1]:nTotalSize THEN
+      		// Add the printer to the list that will be returned
+      		sPrinterList += CR + arrTabLoad[i]:sPrinterName	
+      	ELSE
+      		// exit the loop
+      		BREAK	
+      	END
+      	
+      END
+      
+      // Return the list of identical printers
+      RESULT sPrinterList
+     type : 458752
+   -
+     name : ConfigurePrinters
+     procedure_id : 1637930222668618974
+     type_code : 15
+     code : |1-
+      // Syntax:
+      //[ <Result> = ] ConfigurePrinters ()
+      //
+      // This procedure is used to open the configuration window
+      
+      // Return value:
+      // 	boolean: True if the configuration was performed, False otherwise
+      
+      PROCEDURE ConfigurePrinters()
+      
+      // Open the configuration window
+      IF Open(WIN_Configuration) THEN
+      	
+      	// Retrieve the printers from the INI file
+      	GetPrinters()	
+      	
+      	RESULT True
+      END
+      
+      RESULT False
+     type : 458752
+   -
+     name : FavoritePrinter
+     procedure_id : 1637930222668684510
+     type_code : 15
+     code : |1+
+      // Syntax:
+      //[ <Result> = ] FavoritePrinter ([<sPrinterName> is string])
+      //
+      // Parameters:
+      //	sPrinterName (ANSI string - default value=""): name of the printer that must be defined as favorite printer
+      // Return value:
+      // 	Undefined type: String: Returns the name of the favorite printer (if no parameter is specified)
+      //						Boolean: Returns True if the assignment was successful, False if the printer was not found in the list of printers
+      
+      // If this parameter is not specified, the function returns the name of the favorite printer
+      PROCEDURE FavoritePrinter(LOCAL sPrinterName is string = "")
+      
+      // If the favorite printer is empty, return the favorite printer that was defined
+      IF sPrinterName = "" THEN
+      	RESULT pPrivatePrints.gsFavoritePrinter
+      END
+      
+      // Retrieve all the printers installed on the computer
+      sPrinterList is string = iListPrinter()
+      
+      IF Position(sPrinterList,sPrinterName) > 0 THEN
+      	
+      	// Refresh the favorite printer
+      	pPrivatePrints.gsFavoritePrinter = sPrinterName
+      	
+      	// Save it in the configuration file
+      	INIWrite(<§@10ee9b3500b9a9470006§>,<§@10ee9b3500b9a9470007§>,sPrinterName,pPrivatePrints.gsConfigFile)
+      	
+      	// Returns True, the function was successful
+      	RESULT True
+      	
+      ELSE
+      	
+      	// Return False, the favorite printer was not found in the list of printers
+      	RESULT False
+      	
+      END
+     type : 458752
+   -
+     name : iAutoConfigure
+     procedure_id : 1637930222668750046
+     type_code : 15
+     code : |1-
+      // Syntax:
+      //[ <Result> = ] iAutoConfigure ()
+      //
+      // This function is used to automatically configure the printout with a favorite printer or if it is not found in the list of printers
+      // available with the first one found
+      //
+      // Return value:
+      // 	boolean: True if the function was successful, False otherwise
+      
+      PROCEDURE iAutoConfigure()
+      
+      sPrinterList is string
+      
+      
+      // Call the function used to distribute the workload among the different printers
+      sPrinterList = DistributeLoad()
+      
+      IF sPrinterList ~= "" THEN
+      	Error(<§@10ee9b3500b9a9470008§>, <§@10ee9b3500b9a9470009§>)
+      	RESULT False
+      END
+      
+      // Check the favorite printer
+      IF NOT pPrivatePrints.gsPrinterList ~= "" THEN
+      	
+      	// Search for the favorite printer in the list of printers received by DistributeLoad
+      	IF Position(sPrinterList,pPrivatePrints.gsPrinterList) > 0 THEN
+      		
+      		// Configures the default printer with the favorite printer
+      		iConfigure(pPrivatePrints.gsPrinterList)
+      		RESULT True
+      		
+      	END	
+      	
+      END
+      
+      // The favorite printer was not found
+      iConfigure(ExtractString(sPrinterList, 1, CR))
+      
+      // Return True
+      RESULT True
+     type : 458752
+  procedure_templates : []
+  property_templates : []
+ code_parameters :
+  internal_properties : CAAAAAgAAACVGQgYbalU7DKC3oH4ItDrjtcTHXXV/EuH8q0IbhyQlw==
+  original_name : pImpressions
+resources :
+ string_res :
+  identifier : 0x10ee9b3500b9a947
+  internal_properties : CAAAAAgAAACm76HWfKGWp33VjXInA4cRlqArlgTTA862QGt72W2ld5Y=
+  strings :
+   -
+     text :
+      en-GB : winspool.drv
+     index : 0
+   -
+     text :
+      en-GB : OpenPrinterA
+     index : 1
+   -
+     text :
+      en-GB : "Cannot open printer\r\n%1"
+     index : 2
+   -
+     text :
+      en-GB : EnumJobsA
+     index : 3
+   -
+     text :
+      en-GB : ClosePrinter
+     index : 4
+   -
+     text :
+      en-GB : +nNbJobs;+nTotalSize
+     index : 5
+   -
+     text :
+      en-GB : FAVORITE
+     index : 6
+   -
+     text :
+      en-GB : Printer
+     index : 7
+   -
+     text :
+      en-GB : No printer is installed on this computer or no printer is selected
+     index : 8
+   -
+     text :
+      en-GB : "To modify this configuration, click the \"Configure\" button"
+     index : 9
+custom_note :
+ internal_properties : CAAAAAgAAABtB9HWVzrXO2+4NDRVK0vmzaNKrCKqH1DBX30lMmGZ
